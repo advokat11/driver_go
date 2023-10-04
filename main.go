@@ -72,6 +72,6 @@ func main() {
 	bar.Finish()
 
 	fmt.Printf("Successful installs: %d, Failed installs: %d\n", successfulInstalls, failedInstalls)
-	fmt.Printf("Driver installation is complete, press any button to exit.")
+	fmt.Printf("Driver installation is complete, rebooting is recommended. Press any button to exit.")
 	fmt.Scanln()
 }
