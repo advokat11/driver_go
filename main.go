@@ -11,6 +11,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
+const maxNameLength = 15
+
 func main() {
 
 	driverFiles, err := findDriverFiles()
@@ -26,7 +28,8 @@ func main() {
 	for _, path := range driverFiles {
 
 		driverName := filepath.Base(path)
-		msg := fmt.Sprintf("Устанавливаемый драйвер: %s", driverName)
+
+		msg := getProgressMessage(driverName)
 
 		bar.Describe(msg)
 
@@ -43,6 +46,17 @@ func main() {
 
 	printStats(successfulInstalls, failedInstalls)
 
+}
+
+func getProgressMessage(name string) string {
+
+	msg := fmt.Sprintf("Устанавливаемый драйвер: %s", name)
+
+	// дополняем пробелами до нужной длины
+	remain := maxNameLength - len(name)
+	msg += strings.Repeat(" ", remain)
+
+	return msg
 }
 
 func findDriverFiles() ([]string, error) {
@@ -76,7 +90,7 @@ func printStats(success uint64, failed uint64) {
 
 	fmt.Printf("Успешно установлено: %d, Установить не удалось: %d\n", success, failed)
 
-	fmt.Print("Установка драйверов завершена. Для выхода нажмите любую клавишу.")
+	fmt.Print("Установка драйверов завершена. Для выхода нажмите ENTER.")
 	fmt.Scanln()
 
 }
