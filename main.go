@@ -11,8 +11,6 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-const maxNameLength = 15
-
 func main() {
 
 	driverFiles, err := findDriverFiles()
@@ -27,12 +25,6 @@ func main() {
 
 	for _, path := range driverFiles {
 
-		driverName := filepath.Base(path)
-
-		msg := getProgressMessage(driverName)
-
-		bar.Describe(msg)
-
 		if installDriver(path) != nil {
 			failedInstalls++
 		} else {
@@ -46,17 +38,6 @@ func main() {
 
 	printStats(successfulInstalls, failedInstalls)
 
-}
-
-func getProgressMessage(name string) string {
-
-	msg := fmt.Sprintf("Устанавливаемый драйвер: %s", name)
-
-	// дополняем пробелами до нужной длины
-	remain := maxNameLength - len(name)
-	msg += strings.Repeat(" ", remain)
-
-	return msg
 }
 
 func findDriverFiles() ([]string, error) {
