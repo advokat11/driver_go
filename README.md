@@ -12,7 +12,9 @@
 Чтобы установить проект, выполните следующие команды:
 
 ```bash
-go get github.com/schollz/progressbar/v3
+git clone https://github.com/advokat11/driver_go
+cd driver_go/
+go build
 ```
 
 ## Использование
