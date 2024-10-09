@@ -91,6 +91,5 @@ func writeToLogFile(logFile *os.File, text string) {
 
 func printStats(success uint64, failed uint64) {
 	fmt.Printf("Успешно установлено: %d, Установить не удалось: %d\n", success, failed)
-	fmt.Print("Установка драйверов завершена. Для выхода нажмите ENTER.")
-	fmt.Scanln()
+	fmt.Print("Установка драйверов завершена.")
 }
