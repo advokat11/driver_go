@@ -59,16 +59,23 @@ func main() {
 }
 
 func printLogo() {
-	// Создание красивого ASCII-арта для AQ
+	// Create a beautiful ASCII-art for AQ
 	logo := figure.NewFigure("AQ", "slant", true)
 	color.Set(color.FgHiCyan)
 	logo.Print()
+	color.Unset()
 
-	// Подпись drivers выровненная по центру
+	// Display "drivers" centered under the logo
 	signature := "drivers"
 	logoWidth := len(strings.Split(logo.String(), "\n")[0])
 	padding := (logoWidth - len(signature)) / 2
+	color.Set(color.FgHiCyan)
 	fmt.Printf("%s%s\n", strings.Repeat(" ", padding), signature)
+
+	// Display the version centered below "drivers"
+	version := "v3.6"
+	paddingVersion := (logoWidth - len(version)) / 2
+	fmt.Printf("%s%s\n", strings.Repeat(" ", paddingVersion), version)
 	color.Unset()
 }
 
