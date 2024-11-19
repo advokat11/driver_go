@@ -63,13 +63,13 @@ func printLogo() {
 	logo := figure.NewFigure("AQ", "slant", true)
 	color.Set(color.FgHiCyan)
 	logo.Print()
-	color.Unset()
 
 	// Подпись drivers выровненная по центру
 	signature := "drivers"
 	logoWidth := len(strings.Split(logo.String(), "\n")[0])
 	padding := (logoWidth - len(signature)) / 2
 	fmt.Printf("%s%s\n", strings.Repeat(" ", padding), signature)
+	color.Unset()
 }
 
 func openLogFile() (*os.File, error) {
