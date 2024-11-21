@@ -12,9 +12,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 )
+
+var logMutex sync.Mutex
 
 func main() {
 	printLogo()
@@ -34,7 +39,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Указываем вывод в os.Stdout и обновляем шаблон прогресс-бара
+	// Создаем прогресс-бар
 	bar := pb.New(len(driverFiles)).
 		SetWriter(os.Stdout).
 		SetRefreshRate(100 * time.Millisecond).
@@ -44,37 +49,65 @@ func main() {
 	var successfulInstalls uint64
 	var failedInstalls uint64
 
-	for _, path := range driverFiles {
-		err := installDriver(path, logFile)
-		if err != nil {
-			failedInstalls++
-			writeToLogFile(logFile, fmt.Sprintf("Установка драйвера %s не удалась: %v\n", path, err))
-		} else {
-			successfulInstalls++
-			writeToLogFile(logFile, fmt.Sprintf("Драйвер %s успешно установлен\n", path))
-		}
-		bar.Increment()
+	// Создаем канал для путей к драйверам
+	driverChan := make(chan string)
+
+	// Определяем количество рабочих горутин (например, количество CPU)
+	numWorkers := runtime.NumCPU()
+
+	// Создаем WaitGroup
+	var wg sync.WaitGroup
+
+	// Запускаем рабочие горутины
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for path := range driverChan {
+				err := installDriver(path, logFile)
+				if err != nil {
+					atomic.AddUint64(&failedInstalls, 1)
+					writeToLogFile(logFile, fmt.Sprintf("Установка драйвера %s не удалась: %v\n", path, err))
+				} else {
+					atomic.AddUint64(&successfulInstalls, 1)
+					writeToLogFile(logFile, fmt.Sprintf("Драйвер %s успешно установлен\n", path))
+				}
+				bar.Increment()
+			}
+		}()
 	}
 
+	// Отправляем пути к драйверам в канал
+	for _, path := range driverFiles {
+		driverChan <- path
+	}
+	close(driverChan)
+
+	// Ожидаем завершения всех горутин
+	wg.Wait()
+
 	bar.Finish()
-	printStats(successfulInstalls, failedInstalls)
+
+	successful := atomic.LoadUint64(&successfulInstalls)
+	failed := atomic.LoadUint64(&failedInstalls)
+	printStats(successful, failed)
 }
 
 func printLogo() {
-	// Create a beautiful ASCII-art for AQ
+	// Создаем красивый ASCII-арт для AQ
 	logo := figure.NewFigure("AQ", "slant", true)
 	color.Set(color.FgHiCyan)
 	logo.Print()
 	color.Unset()
 
-	// Display "drivers" centered under the logo
+	// Отображаем "drivers" по центру под логотипом
 	signature := "drivers"
 	logoWidth := len(strings.Split(logo.String(), "\n")[0])
 	padding := (logoWidth - len(signature)) / 2
 	color.Set(color.FgHiCyan)
 	fmt.Printf("%s%s\n", strings.Repeat(" ", padding), signature)
 
-	// Display the version centered below "drivers"
+	// Отображаем версию по центру под "drivers"
 	version := "v3.6"
 	paddingVersion := (logoWidth - len(version)) / 2
 	fmt.Printf("%s%s\n", strings.Repeat(" ", paddingVersion), version)
@@ -116,6 +149,8 @@ func installDriver(path string, logFile *os.File) error {
 }
 
 func writeToLogFile(logFile *os.File, text string) {
+	logMutex.Lock()
+	defer logMutex.Unlock()
 	writer := bufio.NewWriter(transform.NewWriter(logFile, charmap.Windows1251.NewEncoder()))
 	if _, err := writer.WriteString(text); err != nil {
 		log.Printf("Ошибка при записи в лог-файл: %v", err)
