@@ -3,17 +3,17 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-
 	"github.com/cheggaaa/pb/v3"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/fatih/color"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -34,9 +34,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bar := pb.New(len(driverFiles))
-	bar.SetTemplateString(`{{ bar . "[" "■" ">" " " "]" }} {{percent .}} | {{counters .}}`)
-	bar.SetWriter(color.Output)
+	// Указываем вывод в os.Stdout и обновляем шаблон прогресс-бара
+	bar := pb.New(len(driverFiles)).
+		SetWriter(os.Stdout).
+		SetRefreshRate(100 * time.Millisecond).
+		SetTemplateString(`{{ bar . "[" "■" ">" " " "]" }} {{percent .}} | {{counters .}}`)
 	bar.Start()
 
 	var successfulInstalls uint64
